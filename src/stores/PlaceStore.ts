@@ -1,6 +1,6 @@
 import type Place from '@/types/place';
 import { defineStore } from 'pinia';
-import { apiClient } from '@/services/placeApi';
+import { apiClient } from '@/services/apiClient';
 
 export const usePlaceStore = defineStore({
     id: 'place',
