@@ -55,7 +55,7 @@ import type Place from '@/types/place';
 // import clusterImages from '@/assets/clusterImages';
 import PlaceCard from '@/components/PlaceCard.vue';
 // import { usePlaceStore } from '@/stores/PlaceStore';
-import { apiClient } from '@/services/placeApi';
+import { apiClient } from '@/services/apiClient';
 
 const state: {
     filteredPlaces: Place[];

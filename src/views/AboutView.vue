@@ -95,7 +95,7 @@
 
 <script setup lang="ts">
 import { fetchPlaceData } from '@/services/googleMaps';
-import { apiClient } from '@/services/placeApi';
+import { apiClient } from '@/services/apiClient';
 import type Place from '@/types/place';
 import { BIconPlug, BIconWifi, BIconLink45deg } from 'bootstrap-icons-vue';
 import { onMounted, ref, type Ref } from 'vue';

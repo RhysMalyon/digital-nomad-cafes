@@ -1,6 +1,6 @@
 import type Place from '@/types/place';
 import type { RouteLocationNormalizedLoaded } from 'vue-router';
-import { apiClient } from '@/services/placeApi';
+import { apiClient } from '@/services/apiClient';
 
 // Functions requiring PlacesService will need access to Google Map object
 // onMounted -> mapRef.value.$mapPromise (returns a promise so can use .then())

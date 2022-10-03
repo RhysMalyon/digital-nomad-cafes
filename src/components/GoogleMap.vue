@@ -36,7 +36,7 @@
 import { computed, reactive, ref } from 'vue';
 import type Place from '@/types/place';
 // import clusterImages from '@/assets/clusterImages';
-import { apiClient } from '@/services/placeApi';
+import { apiClient } from '@/services/apiClient';
 
 const state: {
     filteredPlaces: Place[];
