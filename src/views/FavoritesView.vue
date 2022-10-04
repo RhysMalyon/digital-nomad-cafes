@@ -1,19 +1,21 @@
 <template>
-    <ul v-for="favorite in favorites" :key="favorite.id">
-        <li>{{ favorite.name }}</li>
-    </ul>
+    <div class="container">
+        <div v-if="authStore.favorites.length > 0">
+            <ul v-for="favorite in authStore.favorites" :key="favorite['id']">
+                <li>{{ favorite['name'] }}</li>
+            </ul>
+        </div>
+
+        <div v-else>
+            <p>You don't have any favourites yet.</p>
+        </div>
+    </div>
 </template>
 
 <script setup lang="ts">
 import { useAuthStore } from '@/stores/AuthStore';
-import type Place from '@/types/place';
 
 const authStore = useAuthStore();
-let favorites: Place[];
-
-if (authStore.favorites) {
-    favorites = authStore.favorites;
-}
 </script>
 
 <style></style>

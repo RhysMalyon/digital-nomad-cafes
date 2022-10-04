@@ -77,7 +77,6 @@ router.beforeEach(async (to, _from, next) => {
                             new Date().getTime()) /
                             60000
                     );
-                    console.log(minutesToExpiry);
 
                     if (
                         isTokenExpired(tokensObject) ||
@@ -94,12 +93,16 @@ router.beforeEach(async (to, _from, next) => {
                             authStore.user.user_id,
                             updatedTokens.access_token
                         );
-                    } else {
+                    } else if (minutesToExpiry > 5) {
                         // Use existing access token
                         fetchUserData(
                             authStore.user.user_id,
                             tokensObject.access_token
                         );
+                    } else {
+                        // Sign user out and redirect to home
+                        authStore.logout();
+                        router.push('/login');
                     }
                 }
 

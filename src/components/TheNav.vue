@@ -7,17 +7,11 @@
             <p v-if="!authStore.isAuthenticated" @click="router.push('/login')">
                 Sign In
             </p>
-            <div class="d-flex">
-                <router-link
-                    v-if="authStore.isAuthenticated"
-                    to="/favorites"
-                    class="me-3"
-                >
+            <div v-if="authStore.isAuthenticated" class="d-flex">
+                <router-link to="/favorites" class="me-3">
                     Favorites
                 </router-link>
-                <p v-if="authStore.isAuthenticated" @click="authStore.logout">
-                    Sign Out
-                </p>
+                <p @click="authStore.logout">Sign Out</p>
             </div>
         </div>
     </nav>

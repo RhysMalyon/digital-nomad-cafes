@@ -49,12 +49,10 @@ export const useAuthStore = defineStore({
                     const tokensObject = JSON.parse(tokens) as Token;
 
                     if (this.favorites.length === 0) {
-                        const favoritesList = await fetchUserFavorites(
+                        this.getFavorites(
                             this.user.user_id,
                             tokensObject.access_token
                         );
-
-                        this.favorites = favoritesList.favorites;
                     }
                 }
             }
@@ -120,6 +118,68 @@ export const useAuthStore = defineStore({
             clearToken();
 
             router.push('/');
+        },
+
+        async getFavorites(user_id: number, access_token: string) {
+            const favoritesList = await fetchUserFavorites(
+                user_id,
+                access_token
+            );
+
+            this.favorites = favoritesList.favorites;
+        },
+
+        async setFavorite(place_id: string | number) {
+            try {
+                const tokens = localStorage.getItem('diginomad_tokens');
+
+                if (tokens) {
+                    const tokensObject = JSON.parse(tokens) as Token;
+
+                    await apiClient.post(
+                        '/users/favorites',
+                        {
+                            user_id: this.user.user_id,
+                            place_id: place_id,
+                        },
+                        {
+                            headers: {
+                                authorization: `Bearer ${tokensObject.access_token}`,
+                            },
+                        }
+                    );
+
+                    this.getFavorites(
+                        this.user.user_id,
+                        tokensObject.access_token
+                    );
+                }
+            } catch (error) {
+                console.error(error);
+            }
+        },
+
+        async deleteFavorite(favorite_id: string | number) {
+            try {
+                const tokens = localStorage.getItem('diginomad_tokens');
+
+                if (tokens) {
+                    const tokensObject = JSON.parse(tokens) as Token;
+
+                    await apiClient.delete(`/users/favorites/${favorite_id}`, {
+                        headers: {
+                            authorization: `Bearer ${tokensObject.access_token}`,
+                        },
+                    });
+
+                    this.getFavorites(
+                        this.user.user_id,
+                        tokensObject.access_token
+                    );
+                }
+            } catch (error) {
+                console.error(error);
+            }
         },
     },
 });
