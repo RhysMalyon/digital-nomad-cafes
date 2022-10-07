@@ -9,6 +9,7 @@ import {
 } from '@/utils/authClient';
 import type { AxiosResponse } from 'axios';
 import { defineStore } from 'pinia';
+import { useToast } from 'vue-toastification';
 
 interface DefaultUserState {
     user_id: number;
@@ -24,6 +25,8 @@ const defaultUserState: DefaultUserState = {
     user_id: -1,
     username: '',
 };
+
+const toast = useToast();
 
 export const useAuthStore = defineStore({
     id: 'auth',
@@ -151,6 +154,11 @@ export const useAuthStore = defineStore({
             clearToken();
 
             router.push('/');
+
+            toast.success('Signed out!', {
+                timeout: 2000,
+                hideProgressBar: true,
+            });
         },
 
         async getFavorites(user_id: number, access_token: string) {

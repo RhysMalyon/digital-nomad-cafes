@@ -91,10 +91,12 @@ import { useAuthStore } from '@/stores/AuthStore';
 import { useField, useForm } from 'vee-validate';
 import { ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
+import { useToast } from 'vue-toastification';
 import * as Yup from 'yup';
 
 const router = useRouter();
 const route = useRoute();
+const toast = useToast();
 
 const schema = Yup.object({
     username: Yup.string().required('Username is required'),
@@ -132,6 +134,10 @@ const onSubmit = handleSubmit(async (values) => {
                 router.push((route.query.redirect as string) || '/');
 
                 triggerBtnClose();
+                toast.success('Signed in successfully!', {
+                    timeout: 2000,
+                    hideProgressBar: true,
+                });
             } else {
                 apiError.value = 'Username or password is incorrect.';
             }
