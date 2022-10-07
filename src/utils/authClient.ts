@@ -54,20 +54,16 @@ export async function updateTokens(token: Token, username: string) {
         }
     );
 
-    console.log(response.data);
-
     return response.data;
 }
 
 export async function fetchUserData(id: number, token: string) {
     try {
-        const response: AxiosResponse = await apiClient.get(`/users/${id}`, {
+        await apiClient.get(`/users/${id}`, {
             headers: {
                 authorization: `Bearer ${token}`,
             },
         });
-
-        console.log(response);
     } catch (err) {
         console.error(err);
     }

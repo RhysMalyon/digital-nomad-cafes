@@ -1,7 +1,10 @@
 <template>
     <TheNav />
     <Suspense>
-        <router-view />
+        <template #default>
+            <router-view />
+        </template>
+        <template #fallback> Loading... </template>
     </Suspense>
 </template>
 

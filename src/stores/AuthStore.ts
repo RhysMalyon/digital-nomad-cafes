@@ -78,6 +78,41 @@ export const useAuthStore = defineStore({
             localStorage.removeItem('diginomad_user');
         },
 
+        async signup(username: string, password: string) {
+            try {
+                const response: AxiosResponse = await apiClient.post('/users', {
+                    username: username,
+                    password: password,
+                    role: 'user',
+                });
+
+                if (response.status === 200) {
+                    const loginResponse: LoginResponse = await apiClient.post(
+                        '/auth/login',
+                        {
+                            username: username,
+                            password: password,
+                        }
+                    );
+
+                    saveTokens(loginResponse);
+
+                    localStorage.setItem(
+                        'diginomad_user',
+                        JSON.stringify({
+                            user_id: loginResponse.user_id,
+                            username: loginResponse.username,
+                        })
+                    );
+
+                    this.setData();
+                    this.isAuthenticated = true;
+                }
+            } catch (error) {
+                console.error(error);
+            }
+        },
+
         async login(username: string, password: string) {
             try {
                 const response: AxiosResponse = await apiClient.post(
@@ -104,8 +139,6 @@ export const useAuthStore = defineStore({
                     this.setData();
                     this.isAuthenticated = true;
                 }
-
-                console.log(response);
             } catch (err) {
                 console.error(err);
             }
