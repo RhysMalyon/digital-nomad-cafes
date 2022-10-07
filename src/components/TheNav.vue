@@ -44,10 +44,15 @@ p {
     color: #fff;
     text-decoration: none;
 
-    &:hover {
+    &:hover,
+    &:focus {
         color: #fff;
         text-decoration: none;
         opacity: 50%;
     }
+}
+
+.router-link-active {
+    text-decoration: underline;
 }
 </style>

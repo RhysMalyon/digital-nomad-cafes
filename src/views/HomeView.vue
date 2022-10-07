@@ -69,6 +69,7 @@ import { apiClient } from '@/services/apiClient';
 import { BIconHeart, BIconHeartFill } from 'bootstrap-icons-vue';
 import { useAuthStore } from '@/stores/AuthStore';
 import { useHead } from '@vueuse/head';
+import { useToast } from 'vue-toastification';
 
 // Page Meta
 const siteData = reactive({
@@ -87,6 +88,7 @@ useHead({
 });
 
 const authStore = useAuthStore();
+const toast = useToast();
 
 const state: {
     filteredPlaces: Place[];
@@ -178,17 +180,25 @@ function isFavorite(place_id: number | string) {
 }
 
 function handleFavoriteAdd(place_id: number | string) {
-    authStore.setFavorite(place_id);
+    if (authStore.isAuthenticated) {
+        authStore.setFavorite(place_id);
+    } else {
+        toast.info('Sign in to save your favorite cafes!');
+    }
 }
 
 function handleFavoriteDelete(id: number | string) {
-    const favoriteToDelete: Favorite[] = authStore.favorites.filter(
-        (favorite: Favorite) => {
-            return favorite.id === id;
-        }
-    );
+    if (authStore.isAuthenticated) {
+        const favoriteToDelete: Favorite[] = authStore.favorites.filter(
+            (favorite: Favorite) => {
+                return favorite.id === id;
+            }
+        );
 
-    authStore.deleteFavorite(favoriteToDelete[0].favorite_id);
+        authStore.deleteFavorite(favoriteToDelete[0].favorite_id);
+    } else {
+        toast.info('Sign in to save your favorite cafes!');
+    }
 }
 </script>
 
