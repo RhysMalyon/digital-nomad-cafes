@@ -1,5 +1,6 @@
-import { createApp } from 'vue';
+import { createHead } from '@vueuse/head';
 import { createPinia } from 'pinia';
+import { createApp } from 'vue';
 
 import App from '@/App.vue';
 import router from '@/routers/index';
@@ -10,6 +11,7 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 
 const app = createApp(App);
 const pinia = createPinia();
+const head = createHead();
 
 app.use(VueGoogleMaps, {
     load: {
@@ -20,6 +22,7 @@ app.use(VueGoogleMaps, {
 });
 
 app.use(pinia);
+app.use(head);
 app.use(router);
 
 app.mount('#app');

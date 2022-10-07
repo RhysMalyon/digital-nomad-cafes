@@ -64,12 +64,27 @@
 <script setup lang="ts">
 import { computed, reactive } from 'vue';
 import type Place from '@/types/place';
-// import clusterImages from '@/assets/clusterImages';
 import PlaceCard from '@/components/PlaceCard.vue';
-// import { usePlaceStore } from '@/stores/PlaceStore';
 import { apiClient } from '@/services/apiClient';
 import { BIconHeart, BIconHeartFill } from 'bootstrap-icons-vue';
 import { useAuthStore } from '@/stores/AuthStore';
+import { useHead } from '@vueuse/head';
+
+// Page Meta
+const siteData = reactive({
+    title: `Home | ${import.meta.env.VITE_SITE_NAME}`,
+    description: 'Find your nearest work-friendly cafe',
+});
+
+useHead({
+    title: () => siteData.title,
+    meta: [
+        {
+            name: 'description',
+            content: () => siteData.description,
+        },
+    ],
+});
 
 const authStore = useAuthStore();
 
