@@ -39,16 +39,17 @@
                     Login
                 </button>
             </div>
-            <div v-if="apiError" class="alert alert-danger mt-3 mb-0">
-                {{ apiError }}
-            </div>
         </form>
+        <div v-if="apiError" class="alert alert-danger mt-3 mb-0">
+            {{ apiError }}
+        </div>
     </div>
 </template>
 
 <script setup lang="ts">
 import { useAuthStore } from '@/stores/AuthStore';
 import { useField, useForm } from 'vee-validate';
+import { ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import * as Yup from 'yup';
 
@@ -67,10 +68,10 @@ const { handleSubmit, isSubmitting } = useForm({
 const { value: username, errorMessage: usernameError } = useField('username');
 const { value: password, errorMessage: passwordError } = useField('password');
 
-let apiError: string | null = null;
+const apiError = ref<string | null>(null);
 
 const onSubmit = handleSubmit(async (values) => {
-    apiError = null;
+    apiError.value = null;
 
     const authStore = useAuthStore();
     const { username, password } = values;
@@ -81,15 +82,15 @@ const onSubmit = handleSubmit(async (values) => {
             if (authStore.isAuthenticated) {
                 // Redirect to previous url (default to home page)
                 router.push((route.query.redirect as string) || '/');
+            } else {
+                apiError.value = 'Username or password is incorrect.';
             }
-        } else {
-            apiError = 'Please enter username and/or password.';
         }
     } catch (error) {
         if (typeof error === 'string') {
-            apiError = error;
+            apiError.value = error;
         } else {
-            apiError = 'Something went wrong.';
+            apiError.value = 'Something went wrong.';
         }
     }
 });

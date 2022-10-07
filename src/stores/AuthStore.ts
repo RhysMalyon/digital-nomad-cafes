@@ -49,12 +49,10 @@ export const useAuthStore = defineStore({
                     const tokensObject = JSON.parse(tokens) as Token;
 
                     if (this.favorites.length === 0) {
-                        const favoritesList = await fetchUserFavorites(
+                        this.getFavorites(
                             this.user.user_id,
                             tokensObject.access_token
                         );
-
-                        this.favorites = favoritesList.favorites;
                     }
                 }
             }
@@ -78,6 +76,41 @@ export const useAuthStore = defineStore({
             this.user = Object.assign({}, defaultUserState);
             this.favorites = [];
             localStorage.removeItem('diginomad_user');
+        },
+
+        async signup(username: string, password: string) {
+            try {
+                const response: AxiosResponse = await apiClient.post('/users', {
+                    username: username,
+                    password: password,
+                    role: 'user',
+                });
+
+                if (response.status === 200) {
+                    const loginResponse: LoginResponse = await apiClient.post(
+                        '/auth/login',
+                        {
+                            username: username,
+                            password: password,
+                        }
+                    );
+
+                    saveTokens(loginResponse);
+
+                    localStorage.setItem(
+                        'diginomad_user',
+                        JSON.stringify({
+                            user_id: loginResponse.user_id,
+                            username: loginResponse.username,
+                        })
+                    );
+
+                    this.setData();
+                    this.isAuthenticated = true;
+                }
+            } catch (error) {
+                console.error(error);
+            }
         },
 
         async login(username: string, password: string) {
@@ -106,8 +139,6 @@ export const useAuthStore = defineStore({
                     this.setData();
                     this.isAuthenticated = true;
                 }
-
-                console.log(response);
             } catch (err) {
                 console.error(err);
             }
@@ -120,6 +151,68 @@ export const useAuthStore = defineStore({
             clearToken();
 
             router.push('/');
+        },
+
+        async getFavorites(user_id: number, access_token: string) {
+            const favoritesList = await fetchUserFavorites(
+                user_id,
+                access_token
+            );
+
+            this.favorites = favoritesList.favorites;
+        },
+
+        async setFavorite(place_id: string | number) {
+            try {
+                const tokens = localStorage.getItem('diginomad_tokens');
+
+                if (tokens) {
+                    const tokensObject = JSON.parse(tokens) as Token;
+
+                    await apiClient.post(
+                        '/users/favorites',
+                        {
+                            user_id: this.user.user_id,
+                            place_id: place_id,
+                        },
+                        {
+                            headers: {
+                                authorization: `Bearer ${tokensObject.access_token}`,
+                            },
+                        }
+                    );
+
+                    this.getFavorites(
+                        this.user.user_id,
+                        tokensObject.access_token
+                    );
+                }
+            } catch (error) {
+                console.error(error);
+            }
+        },
+
+        async deleteFavorite(favorite_id: string | number) {
+            try {
+                const tokens = localStorage.getItem('diginomad_tokens');
+
+                if (tokens) {
+                    const tokensObject = JSON.parse(tokens) as Token;
+
+                    await apiClient.delete(`/users/favorites/${favorite_id}`, {
+                        headers: {
+                            authorization: `Bearer ${tokensObject.access_token}`,
+                        },
+                    });
+
+                    this.getFavorites(
+                        this.user.user_id,
+                        tokensObject.access_token
+                    );
+                }
+            } catch (error) {
+                console.error(error);
+            }
         },
     },
 });

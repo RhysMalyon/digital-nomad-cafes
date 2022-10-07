@@ -1,13 +1,5 @@
-import {
-    createRouter,
-    createWebHistory,
-    type RouteRecordRaw,
-} from 'vue-router';
-import AboutView from '@/views/AboutView.vue';
-import HomeView from '@/views/HomeView.vue';
-import FavoritesView from '@/views/FavoritesView.vue';
-import LoginView from '@/views/LoginView.vue';
 import { useAuthStore } from '@/stores/AuthStore';
+import type { Token } from '@/types/token';
 import {
     fetchUserData,
     hasToken,
@@ -15,7 +7,16 @@ import {
     saveTokens,
     updateTokens,
 } from '@/utils/authClient';
-import type { Token } from '@/types/token';
+import AboutView from '@/views/AboutView.vue';
+import FavoritesView from '@/views/FavoritesView.vue';
+import HomeView from '@/views/HomeView.vue';
+import LoginView from '@/views/LoginView.vue';
+import SignupView from '@/views/SignupView.vue';
+import {
+    createRouter,
+    createWebHistory,
+    type RouteRecordRaw,
+} from 'vue-router';
 
 const routes: Array<RouteRecordRaw> = [
     {
@@ -40,6 +41,14 @@ const routes: Array<RouteRecordRaw> = [
         component: FavoritesView,
         meta: {
             requiresAuth: true,
+        },
+    },
+    {
+        path: '/signup',
+        name: 'signup',
+        component: SignupView,
+        meta: {
+            requiresAuth: false,
         },
     },
     {
@@ -77,7 +86,6 @@ router.beforeEach(async (to, _from, next) => {
                             new Date().getTime()) /
                             60000
                     );
-                    console.log(minutesToExpiry);
 
                     if (
                         isTokenExpired(tokensObject) ||
@@ -94,12 +102,16 @@ router.beforeEach(async (to, _from, next) => {
                             authStore.user.user_id,
                             updatedTokens.access_token
                         );
-                    } else {
+                    } else if (minutesToExpiry > 5) {
                         // Use existing access token
                         fetchUserData(
                             authStore.user.user_id,
                             tokensObject.access_token
                         );
+                    } else {
+                        // Sign user out and redirect to home
+                        authStore.logout();
+                        router.push('/login');
                     }
                 }
 

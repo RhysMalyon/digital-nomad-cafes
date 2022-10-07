@@ -98,8 +98,9 @@ import { fetchPlaceData } from '@/services/googleMaps';
 import { apiClient } from '@/services/apiClient';
 import type Place from '@/types/place';
 import { BIconPlug, BIconWifi, BIconLink45deg } from 'bootstrap-icons-vue';
-import { onMounted, ref, type Ref } from 'vue';
+import { onMounted, reactive, ref, type Ref } from 'vue';
 import { useRoute } from 'vue-router';
+import { useHead } from '@vueuse/head';
 
 const route = useRoute();
 const myMap = ref();
@@ -120,6 +121,22 @@ place.value.location = {
     lat: place.value.latitude,
     lng: place.value.longitude,
 };
+
+// Page Meta
+const siteData = reactive({
+    title: `${place.value.name} | ${import.meta.env.VITE_SITE_NAME}`,
+    description: `${place.value.address}`,
+});
+
+useHead({
+    title: () => siteData.title,
+    meta: [
+        {
+            name: 'description',
+            content: () => siteData.description,
+        },
+    ],
+});
 
 // Lifecycle Hooks
 onMounted(async () => {

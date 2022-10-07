@@ -20,11 +20,23 @@
                 :opened="state.openedMarkerID === place.placeId"
             >
                 <div style="width: 200px">
-                    <h5>
-                        <router-link :to="`/about/${place.id}`">
-                            {{ place.name }}
-                        </router-link>
-                    </h5>
+                    <div class="d-flex align-items-center">
+                        <h5 class="mb-0">
+                            <router-link :to="`/about/${place.id}`">
+                                {{ place.name }}
+                            </router-link>
+                        </h5>
+                        <a class="btn-favorite mx-3">
+                            <BIconHeartFill
+                                @click="handleFavoriteDelete(place.id)"
+                                v-if="isFavorite(place.id)"
+                            />
+                            <BIconHeart
+                                @click="handleFavoriteAdd(place.id)"
+                                v-else
+                            />
+                        </a>
+                    </div>
                     <p>{{ place.address }}</p>
                 </div>
             </GMapInfoWindow>
@@ -52,10 +64,29 @@
 <script setup lang="ts">
 import { computed, reactive } from 'vue';
 import type Place from '@/types/place';
-// import clusterImages from '@/assets/clusterImages';
 import PlaceCard from '@/components/PlaceCard.vue';
-// import { usePlaceStore } from '@/stores/PlaceStore';
 import { apiClient } from '@/services/apiClient';
+import { BIconHeart, BIconHeartFill } from 'bootstrap-icons-vue';
+import { useAuthStore } from '@/stores/AuthStore';
+import { useHead } from '@vueuse/head';
+
+// Page Meta
+const siteData = reactive({
+    title: `Home | ${import.meta.env.VITE_SITE_NAME}`,
+    description: 'Find your nearest work-friendly cafe',
+});
+
+useHead({
+    title: () => siteData.title,
+    meta: [
+        {
+            name: 'description',
+            content: () => siteData.description,
+        },
+    ],
+});
+
+const authStore = useAuthStore();
 
 const state: {
     filteredPlaces: Place[];
@@ -128,4 +159,50 @@ function findMapCenter() {
         };
     }
 }
+
+interface Favorite extends Place {
+    favorite_id: number;
+}
+
+function isFavorite(place_id: number | string) {
+    let favoriteStatus = false;
+
+    authStore.favorites.forEach((favorite: Favorite) => {
+        if (favorite.id === place_id) {
+            favoriteStatus = true;
+            return;
+        }
+    });
+
+    return favoriteStatus;
+}
+
+function handleFavoriteAdd(place_id: number | string) {
+    authStore.setFavorite(place_id);
+}
+
+function handleFavoriteDelete(id: number | string) {
+    const favoriteToDelete: Favorite[] = authStore.favorites.filter(
+        (favorite: Favorite) => {
+            return favorite.id === id;
+        }
+    );
+
+    authStore.deleteFavorite(favoriteToDelete[0].favorite_id);
+}
 </script>
+
+<style lang="scss" scoped>
+.btn-favorite {
+    height: max-content;
+    width: max-content;
+
+    color: rgb(255, 0, 149);
+    font-size: 1.5rem;
+    cursor: pointer;
+
+    &:hover {
+        color: rgb(187, 0, 109);
+    }
+}
+</style>
