@@ -10,13 +10,13 @@ import {
 import AboutView from '@/views/AboutView.vue';
 import FavoritesView from '@/views/FavoritesView.vue';
 import HomeView from '@/views/HomeView.vue';
-import LoginView from '@/views/LoginView.vue';
 import SignupView from '@/views/SignupView.vue';
 import {
     createRouter,
     createWebHistory,
     type RouteRecordRaw,
 } from 'vue-router';
+import { useToast } from 'vue-toastification';
 
 const routes: Array<RouteRecordRaw> = [
     {
@@ -51,14 +51,6 @@ const routes: Array<RouteRecordRaw> = [
             requiresAuth: false,
         },
     },
-    {
-        path: '/login',
-        name: 'login',
-        component: LoginView,
-        meta: {
-            requiresAuth: false,
-        },
-    },
 ];
 
 const router = createRouter({
@@ -68,6 +60,7 @@ const router = createRouter({
 
 router.beforeEach(async (to, _from, next) => {
     const authStore = useAuthStore();
+    const toast = useToast();
 
     if (!authStore.isInitialized) {
         authStore.initialize();
@@ -87,31 +80,38 @@ router.beforeEach(async (to, _from, next) => {
                             60000
                     );
 
-                    if (
-                        isTokenExpired(tokensObject) ||
-                        (minutesToExpiry <= 5 && minutesToExpiry > 0)
-                    ) {
-                        // Refresh tokens and fetch with new access token
-                        const updatedTokens = await updateTokens(
-                            tokensObject,
-                            authStore.user.username
-                        );
+                    try {
+                        if (
+                            isTokenExpired(tokensObject) ||
+                            (minutesToExpiry <= 5 && minutesToExpiry > 0)
+                        ) {
+                            // Refresh tokens and fetch with new access token
+                            const updatedTokens = await updateTokens(
+                                tokensObject,
+                                authStore.user.username
+                            );
 
-                        saveTokens(updatedTokens);
-                        fetchUserData(
-                            authStore.user.user_id,
-                            updatedTokens.access_token
-                        );
-                    } else if (minutesToExpiry > 5) {
-                        // Use existing access token
-                        fetchUserData(
-                            authStore.user.user_id,
-                            tokensObject.access_token
-                        );
-                    } else {
+                            saveTokens(updatedTokens);
+                            fetchUserData(
+                                authStore.user.user_id,
+                                updatedTokens.access_token
+                            );
+                        } else if (minutesToExpiry > 5) {
+                            // Use existing access token
+                            fetchUserData(
+                                authStore.user.user_id,
+                                tokensObject.access_token
+                            );
+                        }
+                    } catch (error) {
+                        console.error(error);
                         // Sign user out and redirect to home
                         authStore.logout();
-                        router.push('/login');
+
+                        toast.info('Session timed out, please sign in again.', {
+                            timeout: 5000,
+                            hideProgressBar: true,
+                        });
                     }
                 }
 
@@ -119,7 +119,6 @@ router.beforeEach(async (to, _from, next) => {
             }
         } else {
             next({
-                path: '/login',
                 query: {
                     redirect: to.fullPath,
                 },
