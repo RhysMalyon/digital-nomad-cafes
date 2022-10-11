@@ -8,7 +8,7 @@
             fullscreenControl: false,
         }"
         map-type-id="terrain"
-        style="width: 100vw; height: calc(100vh - 124px)"
+        style="width: 100vw; height: calc(100vh - 56px)"
         ref="myMap"
     >
         <GMapMarker
@@ -70,19 +70,37 @@
             </GMapInfoWindow>
         </GMapMarker>
     </GMapMap>
-    <div class="container my-3">
-        <div class="home">
-            <div class="input-group mb-3">
-                <input
-                    type="text"
-                    class="form-control"
-                    placeholder="Enter store name"
-                    v-model="state.placeName"
-                />
-            </div>
-            <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 g-4">
-                <div v-for="place in state.filteredPlaces" :key="place.id">
-                    <place-card :place="place" />
+    <div class="search-bar input-group mb-3">
+        <input
+            type="text"
+            class="form-control"
+            placeholder="Enter store name"
+            v-model="state.placeName"
+        />
+    </div>
+
+    <div class="d-flex position-absolute display-toggle">
+        <button
+            class="btn btn-primary d-flex"
+            @click="toggleList"
+            v-if="mapActive"
+        >
+            <span class="me-1">Show List</span>
+            <BIconViewList class="my-auto" />
+        </button>
+        <button class="btn btn-primary d-flex" @click="toggleList" v-else>
+            <span class="me-1">Show Map</span>
+            <BIconPinMap class="my-auto" />
+        </button>
+    </div>
+
+    <div class="place-container d-none" ref="placeContainer">
+        <div class="my-3">
+            <div class="home">
+                <div class="row row-cols-1 row-cols-sm-2 gy-3 mx-auto">
+                    <div v-for="place in state.filteredPlaces" :key="place.id">
+                        <place-card :place="place" />
+                    </div>
                 </div>
             </div>
         </div>
@@ -101,6 +119,8 @@ import {
     BIconHeartFill,
     BIconPlug,
     BIconWifi,
+    BIconViewList,
+    BIconPinMap,
 } from 'bootstrap-icons-vue';
 import { computed, reactive, ref, type Ref } from 'vue';
 import { useToast } from 'vue-toastification';
@@ -120,6 +140,18 @@ useHead({
         },
     ],
 });
+
+const myMap = ref();
+const placeContainer = ref<HTMLElement | null>(null);
+const mapActive = ref(true);
+
+const toggleList = () => {
+    if (placeContainer.value) {
+        placeContainer.value.classList.toggle('d-none');
+
+        mapActive.value = !mapActive.value;
+    }
+};
 
 const authStore = useAuthStore();
 const toast = useToast();
@@ -197,7 +229,6 @@ function findMapCenter() {
 }
 
 // Fetch place data from Google Places on marker click
-const myMap = ref();
 const placeImages = ref() as Ref<google.maps.places.PlacePhoto[] | undefined>;
 const openingHours = ref() as Ref<
     google.maps.places.PlaceOpeningHours | undefined
@@ -282,13 +313,29 @@ function handleFavoriteDelete(id: number | string) {
     }
 }
 
+.search-bar {
+    // input-group overrides
+    position: absolute !important;
+    width: 360px !important;
+
+    max-width: 100%;
+    top: 56px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 1000;
+
+    @media (min-width: 360px) {
+        top: 64px;
+    }
+}
+
 .background-gradient {
     background-image: linear-gradient(360deg, black, transparent);
     z-index: 100;
 }
 
 .infowindow__active {
-    width: 270px;
+    width: 400px;
 
     img {
         height: 270px;
@@ -318,5 +365,25 @@ function handleFavoriteDelete(id: number | string) {
     &:hover {
         color: rgb(187, 0, 109);
     }
+}
+
+.display-toggle {
+    z-index: 1;
+    top: 112px;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.home {
+    padding-top: 6rem;
+}
+
+.place-container {
+    position: absolute;
+    height: 100vh;
+    width: 100vw;
+    top: 56px;
+    flex-wrap: wrap;
+    background: #fff;
 }
 </style>
