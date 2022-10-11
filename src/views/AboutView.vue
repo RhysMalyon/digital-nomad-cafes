@@ -58,7 +58,10 @@
                     <BIconLink45deg />
                 </a>
             </h1>
-            <div class="d-flex">
+            <div class="place__facilities d-flex mb-3">
+                <span :class="openingHours?.isOpen ? 'tag open' : 'tag closed'">
+                    {{ openingHours?.isOpen ? 'Open' : 'Closed' }}
+                </span>
                 <p v-if="place.hasPower"><BIconPlug /></p>
                 <p v-if="place.hasWifi"><BIconWifi /></p>
             </div>
@@ -79,8 +82,19 @@
 
                 <div class="col-md-6">
                     <h3>Opening Hours</h3>
-                    <div v-if="place.businessHours">
-                        <p v-for="day in place.businessHours" :key="day">
+                    <p>
+                        {{
+                            businessStatus === 'OPERATIONAL'
+                                ? ''
+                                : 'Permanently Closed'
+                        }}
+                    </p>
+
+                    <div v-if="openingHours">
+                        <p
+                            v-for="(day, i) in openingHours.weekday_text"
+                            :key="i"
+                        >
                             {{ day }}
                         </p>
                     </div>
@@ -108,6 +122,12 @@ const myMap = ref();
 // Fetch place and populate data
 const place = ref({}) as Ref<Place>;
 const placeImages = ref() as Ref<google.maps.places.PlacePhoto[] | undefined>;
+const businessStatus = ref() as Ref<
+    google.maps.places.BusinessStatus | undefined
+>;
+const openingHours = ref() as Ref<
+    google.maps.places.PlaceOpeningHours | undefined
+>;
 
 const fetchPlace = async () => {
     const { data } = await apiClient.get(`/places/${route.params.id}`);
@@ -146,10 +166,40 @@ onMounted(async () => {
         }
     );
 
-    const { photos } = (await fetchPlaceData(service, place.value.placeId, [
-        'photo',
-    ])) as google.maps.places.PlaceResult;
+    const { photos, business_status, opening_hours } = (await fetchPlaceData(
+        service,
+        place.value.placeId,
+        ['photo', 'business_status', 'opening_hours']
+    )) as google.maps.places.PlaceResult;
 
     placeImages.value = photos;
+    businessStatus.value = business_status;
+    openingHours.value = opening_hours;
 });
 </script>
+
+<style lang="scss" scoped>
+.place {
+    &__facilities {
+        p {
+            margin-bottom: 0;
+        }
+
+        .tag {
+            padding: 4px 8px;
+            border-radius: 8px;
+            margin-right: 8px;
+        }
+
+        .open {
+            color: #fff;
+            background-color: #008531;
+        }
+
+        .closed {
+            color: #fff;
+            background-color: #850000;
+        }
+    }
+}
+</style>

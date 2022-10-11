@@ -2,6 +2,11 @@
     <GMapMap
         :center="state.mapCenter"
         :zoom="state.mapZoom"
+        :options="{
+            mapTypeControl: false,
+            streetViewControl: false,
+            fullscreenControl: false,
+        }"
         map-type-id="terrain"
         style="width: 100vw; height: calc(100vh - 124px)"
         ref="myMap"
@@ -11,33 +16,56 @@
             :key="place.id"
             :position="place.location"
             :clickable="true"
-            @click="openMarker(place.placeId)"
+            @click="
+                openMarker(place.placeId);
+                handleMarkerClick(place);
+            "
             @closeclick="openMarker(null)"
         >
             <GMapInfoWindow
                 :closeclick="true"
                 @closeclick="openMarker(null)"
                 :opened="state.openedMarkerID === place.placeId"
+                class="p-0"
             >
-                <div style="width: 200px">
-                    <div class="d-flex align-items-center">
+                <div
+                    class="position-absolute w-100 h-100 background-gradient"
+                ></div>
+                <div class="infowindow__active">
+                    <div v-if="placeImages" class="position-relative">
+                        <img
+                            :src="placeImages[0].getUrl()"
+                            class="w-100"
+                            alt="Test"
+                        />
+                    </div>
+                    <div class="infowindow__active-body w-100 p-3">
                         <h5 class="mb-0">
                             <router-link :to="`/about/${place.id}`">
                                 {{ place.name }}
                             </router-link>
                         </h5>
-                        <a class="btn-favorite mx-3">
-                            <BIconHeartFill
-                                @click="handleFavoriteDelete(place.id)"
-                                v-if="isFavorite(place.id)"
-                            />
-                            <BIconHeart
-                                @click="handleFavoriteAdd(place.id)"
-                                v-else
-                            />
-                        </a>
+                        <div class="d-flex justify-content-between mt-3">
+                            <div class="d-flex">
+                                <p v-if="place.hasPower" class="mb-0">
+                                    <BIconPlug style="font-size: 1.5rem" />
+                                </p>
+                                <p v-if="place.hasWifi" class="mb-0">
+                                    <BIconWifi style="font-size: 1.5rem" />
+                                </p>
+                            </div>
+                            <a class="btn-favorite">
+                                <BIconHeartFill
+                                    @click="handleFavoriteDelete(place.id)"
+                                    v-if="isFavorite(place.id)"
+                                />
+                                <BIconHeart
+                                    @click="handleFavoriteAdd(place.id)"
+                                    v-else
+                                />
+                            </a>
+                        </div>
                     </div>
-                    <p>{{ place.address }}</p>
                 </div>
             </GMapInfoWindow>
         </GMapMarker>
@@ -62,13 +90,19 @@
 </template>
 
 <script setup lang="ts">
-import { computed, reactive } from 'vue';
-import type Place from '@/types/place';
 import PlaceCard from '@/components/PlaceCard.vue';
 import { apiClient } from '@/services/apiClient';
-import { BIconHeart, BIconHeartFill } from 'bootstrap-icons-vue';
+import { fetchPlaceData } from '@/services/googleMaps';
 import { useAuthStore } from '@/stores/AuthStore';
+import type Place from '@/types/place';
 import { useHead } from '@vueuse/head';
+import {
+    BIconHeart,
+    BIconHeartFill,
+    BIconPlug,
+    BIconWifi,
+} from 'bootstrap-icons-vue';
+import { computed, reactive, ref, type Ref } from 'vue';
 import { useToast } from 'vue-toastification';
 
 // Page Meta
@@ -162,6 +196,33 @@ function findMapCenter() {
     }
 }
 
+// Fetch place data from Google Places on marker click
+const myMap = ref();
+const placeImages = ref() as Ref<google.maps.places.PlacePhoto[] | undefined>;
+const openingHours = ref() as Ref<
+    google.maps.places.PlaceOpeningHours | undefined
+>;
+
+async function handleMarkerClick(place: Place) {
+    placeImages.value = undefined;
+    openingHours.value = undefined;
+
+    const service = await myMap.value.$mapPromise.then(
+        async (mapObject: google.maps.Map) => {
+            return new window.google.maps.places.PlacesService(mapObject);
+        }
+    );
+
+    const { photos, opening_hours } = (await fetchPlaceData(
+        service,
+        place.placeId,
+        ['photo', 'opening_hours']
+    )) as google.maps.places.PlaceResult;
+
+    placeImages.value = photos;
+    openingHours.value = opening_hours;
+}
+
 interface Favorite extends Place {
     favorite_id: number;
 }
@@ -202,12 +263,55 @@ function handleFavoriteDelete(id: number | string) {
 }
 </script>
 
-<style lang="scss" scoped>
+<style lang="scss">
+// Default infowindow overrides
+.gm-style {
+    .gm-style-iw-c {
+        padding: 0 !important;
+    }
+
+    .gm-style-iw-t {
+        &::after {
+            // Override infowindow arrow colour
+            background: #000000 !important;
+        }
+    }
+
+    .gm-ui-hover-effect {
+        z-index: 101;
+    }
+}
+
+.background-gradient {
+    background-image: linear-gradient(360deg, black, transparent);
+    z-index: 100;
+}
+
+.infowindow__active {
+    width: 270px;
+
+    img {
+        height: 270px;
+        object-fit: cover;
+    }
+
+    &-body {
+        position: absolute;
+        bottom: 0;
+        color: #fff;
+        z-index: 101;
+
+        a {
+            color: #fff;
+        }
+    }
+}
+
 .btn-favorite {
     height: max-content;
     width: max-content;
 
-    color: rgb(255, 0, 149);
+    color: rgb(255, 0, 149) !important;
     font-size: 1.5rem;
     cursor: pointer;
 
