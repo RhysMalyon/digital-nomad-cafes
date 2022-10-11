@@ -81,10 +81,11 @@ export const useAuthStore = defineStore({
             localStorage.removeItem('diginomad_user');
         },
 
-        async signup(username: string, password: string) {
+        // Signup is completed with email - referred to as username in other cases
+        async signup(email: string, password: string) {
             try {
                 const response: AxiosResponse = await apiClient.post('/users', {
-                    username: username,
+                    username: email,
                     password: password,
                     role: 'user',
                 });
@@ -93,7 +94,7 @@ export const useAuthStore = defineStore({
                     const loginResponse: LoginResponse = await apiClient.post(
                         '/auth/login',
                         {
-                            username: username,
+                            username: email,
                             password: password,
                         }
                     );
@@ -141,6 +142,11 @@ export const useAuthStore = defineStore({
 
                     this.setData();
                     this.isAuthenticated = true;
+
+                    toast.success('Signed in successfully!', {
+                        timeout: 2000,
+                        hideProgressBar: true,
+                    });
                 }
             } catch (err) {
                 console.error(err);

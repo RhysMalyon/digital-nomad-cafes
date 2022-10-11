@@ -3,16 +3,16 @@
         <div class="form-signup">
             <form @submit="onSubmit">
                 <div class="form-group mt-3">
-                    <label>Username</label>
+                    <label>Email</label>
                     <input
                         type="text"
-                        v-model="username"
+                        v-model="email"
                         :class="{
                             'form-control': true,
-                            'is-invalid': usernameError,
+                            'is-invalid': emailError,
                         }"
                     />
-                    <div class="invalid-feedback">{{ usernameError }}</div>
+                    <div class="invalid-feedback">{{ emailError }}</div>
                 </div>
 
                 <div class="form-group mt-3">
@@ -20,12 +20,24 @@
                     <input
                         type="password"
                         v-model="password"
+                        @input="
+                            (value) => {
+                                validatePasswordCriteria(value);
+                            }
+                        "
                         :class="{
                             'form-control': true,
                             'is-invalid': passwordError,
                         }"
                     />
                     <div class="invalid-feedback">{{ passwordError }}</div>
+                    <PasswordValidate
+                        :is-minimum-length="isMinimumLength"
+                        :has-number="hasNumber"
+                        :has-lowercase="hasLowercase"
+                        :has-uppercase="hasUppercase"
+                        :has-special="hasSpecial"
+                    />
                 </div>
 
                 <div class="form-group mt-3">
@@ -69,6 +81,7 @@ import { useField, useForm } from 'vee-validate';
 import { ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import * as Yup from 'yup';
+import PasswordValidate from '@/components/PasswordValidate.vue';
 
 const router = useRouter();
 const route = useRoute();
@@ -78,14 +91,33 @@ const validEmailCheck = /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,4}$/i;
 const passwordStrengthCheck =
     /^(?=(.*[a-z]){1,})(?!.* )(?=(.*[A-Z]){1,})(?=(.*[0-9]){1,})(?=(.*[!@#$%^&*()\-__+.]){1,}).{8,}$/;
 
+// Individual criteria validation
+const isMinimumLength = ref<boolean>(false);
+const hasNumber = ref<boolean>(false);
+const hasLowercase = ref<boolean>(false);
+const hasUppercase = ref<boolean>(false);
+const hasSpecial = ref<boolean>(false);
+
+const validatePasswordCriteria = (value: Event) => {
+    const input = value.target as HTMLInputElement;
+
+    if (input) {
+        isMinimumLength.value = input.value.length >= 8;
+        hasNumber.value = /\d/.test(input.value);
+        hasLowercase.value = /[a-z]/.test(input.value);
+        hasUppercase.value = /[A-Z]/.test(input.value);
+        hasSpecial.value = /[!@#$%^&*)(+=._-]/.test(input.value);
+    }
+};
+
 const schema = Yup.object().shape({
-    username: Yup.string()
+    email: Yup.string()
         .matches(validEmailCheck, 'Invalid email.')
-        .required('Username is a required field.'),
+        .required('Email is a required field.'),
     password: Yup.string()
         .matches(
             passwordStrengthCheck,
-            'Password must contain at least 1 lowercase character, 1 uppercase character, 1 number, and 1 special character'
+            'Password must be at least 8 characters and contain at least 1 lowercase character, 1 uppercase character, 1 number, and 1 special character'
         )
         .required('Password is a required field.'),
     passwordConfirmation: Yup.string()
@@ -97,7 +129,7 @@ const { handleSubmit, isSubmitting } = useForm({
     validationSchema: schema,
 });
 
-const { value: username, errorMessage: usernameError } = useField('username');
+const { value: email, errorMessage: emailError } = useField('email');
 const { value: password, errorMessage: passwordError } = useField('password');
 const { value: passwordConfirmation, errorMessage: passwordConfirmationError } =
     useField('passwordConfirmation');
@@ -108,11 +140,11 @@ const onSubmit = handleSubmit(async (values) => {
     apiError.value = null;
 
     const authStore = useAuthStore();
-    const { username, password } = values;
+    const { email, password } = values;
 
     try {
-        if (username && password) {
-            await authStore.signup(username, password);
+        if (email && password) {
+            await authStore.signup(email, password);
             if (authStore.isAuthenticated) {
                 // Redirect to previous url (default to home page)
                 router.push((route.query.redirect as string) || '/');
