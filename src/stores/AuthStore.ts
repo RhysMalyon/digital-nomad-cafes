@@ -36,6 +36,7 @@ export const useAuthStore = defineStore({
         isAuthenticated: hasToken(),
         isInitialized: false,
         favorites: [],
+        forcedSignout: false,
     }),
 
     actions: {
@@ -161,10 +162,14 @@ export const useAuthStore = defineStore({
 
             router.push('/');
 
-            toast.success('Signed out!', {
-                timeout: 2000,
-                hideProgressBar: true,
-            });
+            if (this.forcedSignout) {
+                this.forcedSignout = false;
+            } else {
+                toast.success('Signed out!', {
+                    timeout: 2000,
+                    hideProgressBar: true,
+                });
+            }
         },
 
         async getFavorites(user_id: number, access_token: string) {

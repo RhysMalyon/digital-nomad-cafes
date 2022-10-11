@@ -106,6 +106,7 @@ router.beforeEach(async (to, _from, next) => {
                     } catch (error) {
                         console.error(error);
                         // Sign user out and redirect to home
+                        authStore.forcedSignout = true;
                         authStore.logout();
 
                         toast.info('Session timed out, please sign in again.', {
