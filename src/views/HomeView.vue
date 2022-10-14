@@ -39,13 +39,20 @@
                             alt="Test"
                         />
                     </div>
+                    <span
+                        :class="isOpen ? 'tag__card open' : 'tag__card closed'"
+                    >
+                        {{ isOpen ? 'Open' : 'Closed' }}
+                    </span>
                     <div class="infowindow__active-body w-100 p-3">
                         <h5 class="mb-0">
                             <router-link :to="`/about/${place.id}`">
                                 {{ place.name }}
                             </router-link>
                         </h5>
-                        <div class="d-flex justify-content-between mt-3">
+                        <div
+                            class="d-flex justify-content-between align-items-center mt-3"
+                        >
                             <div class="d-flex">
                                 <p v-if="place.hasPower" class="mb-0">
                                     <BIconPlug style="font-size: 1.5rem" />
@@ -94,10 +101,12 @@
         </button>
     </div>
 
-    <div class="place-container d-none" ref="placeContainer">
+    <div class="place-container d-none d-lg-block" ref="placeContainer">
         <div class="my-3">
             <div class="home">
-                <div class="row row-cols-1 row-cols-sm-2 gy-3 mx-auto">
+                <div
+                    class="row row-cols-1 row-cols-sm-2 row-cols-lg-1 gy-3 mx-auto"
+                >
                     <div v-for="place in state.filteredPlaces" :key="place.id">
                         <place-card :place="place" />
                     </div>
@@ -122,7 +131,15 @@ import {
     BIconViewList,
     BIconPinMap,
 } from 'bootstrap-icons-vue';
-import { computed, reactive, ref, type Ref } from 'vue';
+import {
+    computed,
+    onMounted,
+    onUnmounted,
+    reactive,
+    ref,
+    watch,
+    type Ref,
+} from 'vue';
 import { useToast } from 'vue-toastification';
 
 // Page Meta
@@ -142,16 +159,6 @@ useHead({
 });
 
 const myMap = ref();
-const placeContainer = ref<HTMLElement | null>(null);
-const mapActive = ref(true);
-
-const toggleList = () => {
-    if (placeContainer.value) {
-        placeContainer.value.classList.toggle('d-none');
-
-        mapActive.value = !mapActive.value;
-    }
-};
 
 const authStore = useAuthStore();
 const toast = useToast();
@@ -233,10 +240,12 @@ const placeImages = ref() as Ref<google.maps.places.PlacePhoto[] | undefined>;
 const openingHours = ref() as Ref<
     google.maps.places.PlaceOpeningHours | undefined
 >;
+const isOpen = ref<boolean>(false);
 
 async function handleMarkerClick(place: Place) {
     placeImages.value = undefined;
     openingHours.value = undefined;
+    isOpen.value = false;
 
     const service = await myMap.value.$mapPromise.then(
         async (mapObject: google.maps.Map) => {
@@ -253,6 +262,15 @@ async function handleMarkerClick(place: Place) {
     placeImages.value = photos;
     openingHours.value = opening_hours;
 }
+
+watch(
+    () => [openingHours.value],
+    () => {
+        if (openingHours.value) {
+            isOpen.value = !!openingHours.value.isOpen;
+        }
+    }
+);
 
 interface Favorite extends Place {
     favorite_id: number;
@@ -292,6 +310,57 @@ function handleFavoriteDelete(id: number | string) {
         toast.info('Sign in to save your favorite cafes!');
     }
 }
+
+// Place list container toggle
+const placeContainer = ref<HTMLElement | null>(null);
+const mapActive = ref(true);
+
+const toggleList = () => {
+    if (placeContainer.value) {
+        const containerClassList = placeContainer.value.classList;
+        handleWindowResize();
+
+        if (window.innerWidth >= 992) {
+            containerClassList.toggle('slide-in');
+        } else {
+            containerClassList.remove('slide-in');
+            containerClassList.toggle('d-none');
+        }
+
+        mapActive.value = !mapActive.value;
+    }
+};
+
+// Maintain container visibility between screen sizes
+const handleWindowResize = () => {
+    if (placeContainer.value) {
+        const containerClassList = placeContainer.value.classList;
+
+        if (window.innerWidth >= 992) {
+            if (mapActive.value) {
+                containerClassList.contains('slide-in') &&
+                    containerClassList.remove('slide-in');
+            } else {
+                containerClassList.add('slide-in');
+            }
+        } else {
+            if (mapActive.value) {
+                !containerClassList.contains('d-none') &&
+                    containerClassList.add('d-none');
+            } else {
+                containerClassList.remove('d-none');
+            }
+        }
+    }
+};
+
+onMounted(() => {
+    window.addEventListener('resize', handleWindowResize);
+});
+
+onUnmounted(() => {
+    window.removeEventListener('resize', handleWindowResize);
+});
 </script>
 
 <style lang="scss">
@@ -355,15 +424,25 @@ function handleFavoriteDelete(id: number | string) {
 }
 
 .btn-favorite {
-    height: max-content;
-    width: max-content;
+    height: 40px;
+    width: 40px;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
 
     color: rgb(255, 0, 149) !important;
+    background-color: #fff;
+    border-radius: 50%;
     font-size: 1.5rem;
     cursor: pointer;
 
     &:hover {
         color: rgb(187, 0, 109);
+    }
+
+    svg {
+        padding-top: 4px;
     }
 }
 
@@ -376,6 +455,10 @@ function handleFavoriteDelete(id: number | string) {
 
 .home {
     padding-top: 6rem;
+
+    @media (min-width: 992px) {
+        padding-top: 0;
+    }
 }
 
 .place-container {
@@ -385,5 +468,24 @@ function handleFavoriteDelete(id: number | string) {
     top: 56px;
     flex-wrap: wrap;
     background: #fff;
+
+    @media (min-width: 992px) {
+        height: 80%;
+        width: 30%;
+        max-width: 360px;
+        top: 50%;
+        transform: translate(-100%, -50%);
+        overflow: scroll;
+        border-radius: 0 1rem 1rem 0;
+        box-shadow: 2px 4px 8px rgb(10 10 10 / 30%);
+        padding-right: 4px;
+        transition: ease-in-out 500ms;
+    }
+}
+
+.slide-in {
+    @media (min-width: 992px) {
+        transform: translate(0%, -50%);
+    }
 }
 </style>

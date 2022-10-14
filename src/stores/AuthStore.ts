@@ -14,16 +14,19 @@ import { useToast } from 'vue-toastification';
 interface DefaultUserState {
     user_id: number;
     username: string;
+    role: string;
 }
 
 interface LoginResponse extends Token {
     user_id: number;
     username: string;
+    role: string;
 }
 
 const defaultUserState: DefaultUserState = {
     user_id: -1,
     username: '',
+    role: '',
 };
 
 const toast = useToast();
@@ -41,22 +44,33 @@ export const useAuthStore = defineStore({
 
     actions: {
         async setData() {
-            const userData = localStorage.getItem('diginomad_user');
+            try {
+                const userData = localStorage.getItem('diginomad_user');
 
-            if (userData) {
-                const data = JSON.parse(userData);
-                this.user = Object.assign({}, defaultUserState, data);
+                if (userData) {
+                    const data = JSON.parse(userData);
+                    this.user = Object.assign({}, defaultUserState, data);
 
-                const tokens = localStorage.getItem('diginomad_tokens');
+                    const tokens = localStorage.getItem('diginomad_tokens');
 
-                if (tokens) {
-                    const tokensObject = JSON.parse(tokens) as Token;
+                    if (tokens) {
+                        const tokensObject = JSON.parse(tokens) as Token;
 
-                    if (this.favorites.length === 0) {
-                        this.getFavorites(
-                            this.user.user_id,
-                            tokensObject.access_token
-                        );
+                        if (this.favorites.length === 0) {
+                            this.getFavorites(
+                                this.user.user_id,
+                                tokensObject.access_token
+                            );
+                        }
+                    }
+                }
+            } catch (error) {
+                console.error(error);
+
+                if (this.isAuthenticated) {
+                    {
+                        this.forcedSignout = true;
+                        this.logout();
                     }
                 }
             }
@@ -107,6 +121,7 @@ export const useAuthStore = defineStore({
                         JSON.stringify({
                             user_id: loginResponse.user_id,
                             username: loginResponse.username,
+                            role: loginResponse.role,
                         })
                     );
 
@@ -138,6 +153,7 @@ export const useAuthStore = defineStore({
                         JSON.stringify({
                             user_id: loginResponse.user_id,
                             username: loginResponse.username,
+                            role: loginResponse.role,
                         })
                     );
 
