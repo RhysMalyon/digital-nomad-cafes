@@ -1,74 +1,105 @@
 <template>
-    <div v-if="place">
+    <div class="place" v-if="place">
         <div
             v-if="placeImages"
-            id="carouselExampleControls"
-            class="carousel slide w-100"
-            data-bs-ride="carousel"
+            class="place__images row g-0 position-relative"
+            style="height: 400px"
         >
-            <div class="carousel-inner">
-                <div
-                    v-for="(image, index) in placeImages"
-                    :key="index"
-                    :class="
-                        index === 0 ? 'carousel-item active' : 'carousel-item'
-                    "
+            <div class="place__images-container col-md-8 g-0 h-100">
+                <img
+                    :src="placeImages[0].getUrl()"
+                    alt="test"
+                    class="place__images-cover w-100 h-100"
+                />
+            </div>
+            <div
+                v-if="!isMobileScreen"
+                class="place__images-container col-md-4 g-0 flex-column h-100"
+            >
+                <img
+                    :src="placeImages[1].getUrl()"
+                    class="place__images-secondary"
+                    alt="test"
+                />
+                <img
+                    :src="placeImages[2].getUrl()"
+                    class="place__images-secondary"
+                    alt="test"
+                />
+            </div>
+            <div
+                class="position-absolute"
+                style="bottom: 8px; right: 8px; width: max-content"
+            >
+                <button
+                    type="button"
+                    class="btn btn-light d-flex p-2"
+                    data-bs-toggle="modal"
+                    data-bs-target="#imageCarousel"
                 >
+                    <BIconGrid3x3Gap />
+                </button>
+            </div>
+            <div
+                v-if="openingHours?.isOpen"
+                class="position-absolute top-0 left-0 ms-2 mt-2"
+            >
+                <span class="tag open">Open</span>
+            </div>
+        </div>
+        <div class="place__header d-flex align-items-center">
+            <div
+                class="container d-flex flex-column flex-md-row justify-content-between align-items-md-center"
+            >
+                <div class="d-flex flex-column">
+                    <h1 class="mb-0">
+                        <a :href="place.website">
+                            {{ place.name }}
+                        </a>
+                    </h1>
+                    <div class="d-flex">
+                        <p
+                            v-if="place.hasPower"
+                            class="place__header-feature mb-0"
+                        >
+                            <BIconPlug />
+                        </p>
+                        <p
+                            v-if="place.hasWifi"
+                            class="place__header-feature mb-0"
+                        >
+                            <BIconWifi />
+                        </p>
+                    </div>
+                </div>
+                <div
+                    v-if="ratings"
+                    class="ratings__container d-flex align-items-center ms-md-3 mt-3 mt-md-0 position-relative"
+                >
+                    <a
+                        class="position-absolute w-100 h-100"
+                        href="#reviews"
+                    ></a>
                     <img
-                        :src="image.getUrl()"
-                        alt=""
-                        class="d-block w-100"
-                        style="
-                            height: 522px;
-                            object-fit: cover;
-                            object-position: 50% 50%;
-                        "
+                        :src="GoogleIcon"
+                        class="ratings__container-icon me-2"
                     />
+                    <span
+                        class="ratings__container-content d-flex align-items-center"
+                    >
+                        {{ ratings }}
+                        <BIconStarFill class="ms-1 me-2" />
+                        ({{ userRatingsTotal }})
+                    </span>
                 </div>
             </div>
-            <button
-                class="carousel-control-prev"
-                type="button"
-                data-bs-target="#carouselExampleControls"
-                data-bs-slide="prev"
-            >
-                <span
-                    class="carousel-control-prev-icon"
-                    aria-hidden="true"
-                ></span>
-                <span class="visually-hidden">Previous</span>
-            </button>
-            <button
-                class="carousel-control-next"
-                type="button"
-                data-bs-target="#carouselExampleControls"
-                data-bs-slide="next"
-            >
-                <span
-                    class="carousel-control-next-icon"
-                    aria-hidden="true"
-                ></span>
-                <span class="visually-hidden">Next</span>
-            </button>
         </div>
         <div class="container my-3">
-            <h1>
-                <a :href="place.website" style="text-decoration: none">
-                    {{ place.name }}
-                    <BIconLink45deg />
-                </a>
-            </h1>
-            <div class="place__facilities d-flex mb-3">
-                <span :class="openingHours?.isOpen ? 'tag open' : 'tag closed'">
-                    {{ openingHours?.isOpen ? 'Open' : 'Closed' }}
-                </span>
-                <p v-if="place.hasPower"><BIconPlug /></p>
-                <p v-if="place.hasWifi"><BIconWifi /></p>
-            </div>
-            <div class="row flex-column flex-md-row">
-                <div class="col-md-6">
-                    <h3>Address</h3>
-                    <p>{{ place.address }}</p>
+            <div
+                class="d-flex flex-column flex-md-row justify-content-md-between"
+            >
+                <div class="place__section border-0">
+                    <h3 class="place__section-heading mb-3">Location</h3>
                     <GMapMap
                         :center="place.location"
                         :zoom="15"
@@ -80,17 +111,13 @@
                     </GMapMap>
                 </div>
 
-                <div class="col-md-6">
-                    <h3>Opening Hours</h3>
-                    <p>
-                        {{
-                            businessStatus === 'OPERATIONAL'
-                                ? ''
-                                : 'Permanently Closed'
-                        }}
+                <div class="place__section">
+                    <h3 class="place__section-heading mb-3">Opening Hours</h3>
+                    <p v-if="businessStatus !== 'OPERATIONAL'">
+                        Permanently Closed'
                     </p>
 
-                    <div v-if="openingHours">
+                    <div v-if="openingHours" class="text-center mt-3">
                         <p
                             v-for="(day, i) in openingHours.weekday_text"
                             :key="i"
@@ -103,21 +130,86 @@
                     </div>
                 </div>
             </div>
+
+            <div id="reviews" class="place__reviews mt-5 row">
+                <h3>Reviews</h3>
+                <div
+                    v-for="(review, index) in reviewsArray"
+                    :key="index + 1"
+                    class="col-md-6"
+                >
+                    <div class="place__reviews-review my-3">
+                        <div class="row g-0 mb-3">
+                            <div
+                                class="review__icon col-1 d-flex justify-content-center align-items-center"
+                            >
+                                <BIconChatRightQuoteFill />
+                            </div>
+                            <div
+                                class="review__body col-11 d-flex align-items-center"
+                            >
+                                <p class="mb-0">{{ review.text }}</p>
+                            </div>
+                        </div>
+                        <div class="d-flex align-items-center ps-3">
+                            <img
+                                :src="review.profile_photo_url"
+                                :alt="review.author_name"
+                                width="30"
+                                height="30"
+                            />
+                            <p class="mb-0 ms-3">
+                                {{ review.author_name }} {{ review.rating }}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
+
+    <CarouselModel :place-images="placeImages" />
 </template>
 
 <script setup lang="ts">
-import { fetchPlaceData } from '@/services/googleMaps';
+import GoogleIcon from '@/assets/google_icon.png';
+import CarouselModel from '@/components/CarouselModal.vue';
 import { apiClient } from '@/services/apiClient';
+import { fetchPlaceData } from '@/services/googleMaps';
 import type Place from '@/types/place';
-import { BIconPlug, BIconWifi, BIconLink45deg } from 'bootstrap-icons-vue';
-import { onMounted, reactive, ref, type Ref } from 'vue';
-import { useRoute } from 'vue-router';
 import { useHead } from '@vueuse/head';
+import {
+    BIconGrid3x3Gap,
+    BIconPlug,
+    BIconWifi,
+    BIconStarFill,
+    BIconChatRightQuoteFill,
+} from 'bootstrap-icons-vue';
+import { onMounted, reactive, ref, watch, type Ref } from 'vue';
+import { useRoute } from 'vue-router';
 
 const route = useRoute();
 const myMap = ref();
+
+// Watch screen width to disable additional images
+const isMobileScreen = ref();
+const screenSize = ref();
+
+window.addEventListener('resize', () => {
+    screenSize.value = window.innerWidth;
+});
+
+watch(
+    () => [screenSize.value],
+    () => {
+        isMobileScreen.value = screenSize.value < 768;
+    }
+);
+
+onMounted(() => {
+    screenSize.value = window.innerWidth;
+    isMobileScreen.value = screenSize.value < 768;
+});
 
 // Fetch place and populate data
 const place = ref({}) as Ref<Place>;
@@ -128,6 +220,9 @@ const businessStatus = ref() as Ref<
 const openingHours = ref() as Ref<
     google.maps.places.PlaceOpeningHours | undefined
 >;
+const ratings = ref<number | undefined>(0);
+const userRatingsTotal = ref<number | undefined>(0);
+const reviewsArray = ref() as Ref<google.maps.places.PlaceReview[] | undefined>;
 
 const fetchPlace = async () => {
     const { data } = await apiClient.get(`/places/${route.params.id}`);
@@ -166,39 +261,148 @@ onMounted(async () => {
         }
     );
 
-    const { photos, business_status, opening_hours } = (await fetchPlaceData(
-        service,
-        place.value.placeId,
-        ['photo', 'business_status', 'opening_hours']
-    )) as google.maps.places.PlaceResult;
+    const {
+        photos,
+        business_status,
+        opening_hours,
+        rating,
+        user_ratings_total,
+        reviews,
+    } = (await fetchPlaceData(service, place.value.placeId, [
+        'photo',
+        'business_status',
+        'opening_hours',
+        'rating',
+        'user_ratings_total',
+        'reviews',
+    ])) as google.maps.places.PlaceResult;
 
     placeImages.value = photos;
     businessStatus.value = business_status;
     openingHours.value = opening_hours;
+    ratings.value = rating;
+    userRatingsTotal.value = user_ratings_total;
+    reviewsArray.value = reviews;
 });
 </script>
 
 <style lang="scss" scoped>
 .place {
-    &__facilities {
-        p {
-            margin-bottom: 0;
+    &__images {
+        transition: ease-in-out 500ms;
+
+        &-container {
+            display: inline-block;
+            overflow: hidden;
         }
 
-        .tag {
-            padding: 4px 8px;
-            border-radius: 8px;
-            margin-right: 8px;
+        &-cover {
+            @extend .place__images;
+
+            object-fit: cover;
+
+            &:hover {
+                scale: 1.02;
+            }
         }
 
-        .open {
-            color: #fff;
-            background-color: #008531;
+        &-secondary {
+            @extend .place__images;
+
+            display: none;
+            height: 50%;
+            width: 100%;
+            object-fit: cover;
+
+            &:hover {
+                scale: 1.02;
+            }
+
+            @media (min-width: 768px) {
+                display: inline-block;
+            }
+        }
+    }
+
+    &__header {
+        padding: 16px 32px;
+        background-color: #ff9b00;
+        min-height: 100px;
+
+        h1 {
+            font-size: clamp(1.5rem, 4vw, 2.5rem);
         }
 
-        .closed {
-            color: #fff;
-            background-color: #850000;
+        a {
+            text-decoration: none;
+            color: #391b00;
+        }
+
+        &-feature {
+            font-family: 'Roboto', sans-serif;
+            font-size: 1.25rem;
+            color: #391b00;
+        }
+    }
+
+    &__section {
+        margin-top: 2rem;
+        border: 1px solid #ffaf33;
+        border-radius: 1rem;
+        overflow: hidden;
+
+        @media (min-width: 768px) {
+            width: 49%;
+        }
+
+        &-heading {
+            background: #ffaf33;
+            padding: 1rem;
+            margin-bottom: 0 !important;
+            text-transform: uppercase;
+            text-align: center;
+        }
+    }
+
+    &__reviews {
+        &-review {
+            padding: 1rem 2rem;
+
+            .review {
+                &__icon {
+                    width: max-content;
+                    color: #ff9b00;
+                    position: absolute;
+                    font-size: 3rem;
+                    z-index: -1;
+                    opacity: 25%;
+                }
+
+                &__body {
+                    p {
+                        padding: 1rem 1rem 0 1rem;
+                    }
+                }
+            }
+        }
+    }
+}
+
+.ratings__container {
+    width: fit-content;
+    height: fit-content;
+    padding: 8px 16px;
+    border-radius: 16px;
+    background: #fff;
+
+    &-icon {
+        width: 24px;
+        height: 24px;
+    }
+
+    &-content {
+        svg {
+            color: #ff9b00;
         }
     }
 }
