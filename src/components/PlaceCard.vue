@@ -12,7 +12,9 @@
                         <a :href="place.website" target="_blank"> Website </a>
                     </small>
                     <br />
-                    <small>{{ place.phoneNumber }}</small>
+                    <small v-if="place.phoneNumber !== 'undefined'">
+                        {{ place.phoneNumber }}
+                    </small>
                 </div>
                 <div class="d-flex mt-3">
                     <p v-if="place.hasPower" class="feature m-0 me-2">
@@ -43,21 +45,22 @@ const place: Ref<Place> = ref(props.place);
 </script>
 
 <style lang="scss" scoped>
-// .card {
-//     color: #391b00;
-//     background: #ff9b00;
-// }
+.card {
+    transition: ease-in-out 500ms;
 
-// .feature {
-//     width: 40px;
-//     height: 40px;
+    a {
+        color: #ff9b00;
+        transition: ease-in-out 500ms;
+    }
 
-//     display: flex;
-//     justify-content: center;
-//     align-items: center;
+    &:hover,
+    &:focus {
+        background: #ff9b00;
+        color: #212529;
 
-//     border: 1px solid #fff;
-//     border-radius: 50%;
-//     padding: 8px;
-// }
+        a {
+            color: #212529;
+        }
+    }
+}
 </style>

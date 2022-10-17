@@ -151,7 +151,9 @@
                                 <p class="mb-0">{{ review.text }}</p>
                             </div>
                         </div>
-                        <div class="d-flex align-items-center ps-3">
+                        <div
+                            class="review__body-profile d-flex align-items-center ps-3"
+                        >
                             <img
                                 :src="review.profile_photo_url"
                                 :alt="review.author_name"
@@ -335,13 +337,13 @@ onMounted(async () => {
 
         a {
             text-decoration: none;
-            color: #391b00;
+            color: #212529;
         }
 
         &-feature {
             font-family: 'Roboto', sans-serif;
             font-size: 1.25rem;
-            color: #391b00;
+            color: #212529;
         }
     }
 
@@ -381,6 +383,13 @@ onMounted(async () => {
                 &__body {
                     p {
                         padding: 1rem 1rem 0 1rem;
+                    }
+
+                    &-profile {
+                        img {
+                            border: 1px solid #ff9b00;
+                            border-radius: 50%;
+                        }
                     }
                 }
             }

@@ -1,5 +1,3 @@
-import type Image from '@/types/image';
-
 export default interface Place {
     id: number;
     placeId: string;
@@ -19,5 +17,5 @@ export default interface Place {
     ratingsTotal: number;
     businessStatus: string;
     businessHours: string[];
-    images: Image[];
+    images: string;
 }
