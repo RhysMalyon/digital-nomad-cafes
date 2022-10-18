@@ -4,12 +4,18 @@
         <template #default>
             <router-view />
         </template>
-        <template #fallback> Loading... </template>
+        <template #fallback>
+            <div class="h-100" style="height: 100vh">
+                <p>Loading...</p>
+            </div>
+        </template>
     </Suspense>
+    <TheFooter />
 </template>
 
 <script setup lang="ts">
 import TheNav from './components/TheNav.vue';
+import TheFooter from './components/TheFooter.vue';
 </script>
 
 <style lang="scss">
