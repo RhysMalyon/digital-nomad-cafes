@@ -11,7 +11,7 @@
                 :key="favorite['id']"
                 :place="favorite"
                 :image="favorite.images[0] ? favorite.images[0] : undefined"
-                class="col-6 my-3"
+                class="col-sm-6 my-3"
             />
         </div>
 

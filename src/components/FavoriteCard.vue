@@ -1,6 +1,9 @@
 <template>
     <div class="h-100">
         <div class="card h-100 position-relative">
+            <a class="btn-favorite position-absolute top-0 end-0 mt-2 me-2">
+                <BIconHeartFill @click="handleFavoriteDelete(place.id)" />
+            </a>
             <div class="d-flex">
                 <div v-if="image" class="card-image">
                     <img
@@ -43,9 +46,14 @@
 </template>
 
 <script setup lang="ts">
-import { ref, type PropType, type Ref } from 'vue';
+import { useAuthStore } from '@/stores/AuthStore';
 import type Place from '@/types/place';
-import { BIconPlug, BIconWifi } from 'bootstrap-icons-vue';
+import { BIconPlug, BIconWifi, BIconHeartFill } from 'bootstrap-icons-vue';
+import { ref, type PropType, type Ref } from 'vue';
+import { useToast } from 'vue-toastification';
+
+const authStore = useAuthStore();
+const toast = useToast();
 
 const props = defineProps({
     place: {
@@ -60,6 +68,24 @@ const props = defineProps({
 
 const place: Ref<Place> = ref(props.place);
 const image: Ref<string | undefined> = ref(props.image);
+
+interface Favorite extends Place {
+    favorite_id: number;
+}
+
+function handleFavoriteDelete(id: number | string) {
+    if (authStore.isAuthenticated) {
+        const favoriteToDelete: Favorite[] = authStore.favorites.filter(
+            (favorite: Favorite) => {
+                return favorite.id === id;
+            }
+        );
+
+        authStore.deleteFavorite(favoriteToDelete[0].favorite_id);
+    } else {
+        toast.info('Sign in to save your favorite cafes!');
+    }
+}
 </script>
 
 <style lang="scss" scoped>

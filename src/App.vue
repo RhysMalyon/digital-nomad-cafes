@@ -71,4 +71,28 @@ body {
     color: #fff;
     background-color: #850000;
 }
+
+.btn-favorite {
+    height: 40px;
+    width: 40px;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    color: rgb(255, 0, 149) !important;
+    background-color: #fff;
+    border-radius: 50%;
+    font-size: 1.5rem;
+    cursor: pointer;
+    z-index: 10;
+
+    &:hover {
+        color: rgb(187, 0, 109);
+    }
+
+    svg {
+        padding-top: 4px;
+    }
+}
 </style>

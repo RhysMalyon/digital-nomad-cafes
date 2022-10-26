@@ -39,11 +39,9 @@
                 <BIconGrid3x3Gap />
             </button>
         </div>
-        <div
-            v-if="openingHours?.isOpen"
-            class="position-absolute top-0 left-0 ms-2 mt-2"
-        >
-            <span class="tag open">Open</span>
+        <div class="position-absolute top-0 left-0 ms-2 mt-2">
+            <span v-if="isOpen" class="tag open">Open</span>
+            <span v-else class="tag closed">Closed</span>
         </div>
     </div>
     <div class="place__header d-flex align-items-center">
@@ -156,6 +154,7 @@ const businessStatus = ref() as Ref<
 const openingHours = ref() as Ref<
     google.maps.places.PlaceOpeningHours | undefined
 >;
+const isOpen = ref(false);
 const ratings = ref<number | undefined>(0);
 const userRatingsTotal = ref<number | undefined>(0);
 const reviewsArray = ref([]) as Ref<
@@ -191,6 +190,33 @@ useHead({
     ],
 });
 
+const findOpenStatus = (
+    businessHours: google.maps.places.PlaceOpeningHoursPeriod
+) => {
+    const today = new Date();
+    const day = today.getDay();
+    const hour = today.getHours();
+    const minute = today.getMinutes();
+
+    if (businessHours.close) {
+        if (businessHours.open.day === day && businessHours.close.day >= day) {
+            if (
+                hour > businessHours.open.hours &&
+                hour < businessHours.close.hours
+            ) {
+                isOpen.value = true;
+            } else if (
+                hour === businessHours.close.hours &&
+                minute < businessHours.close.minutes
+            ) {
+                isOpen.value = true;
+            }
+        }
+    } else {
+        isOpen.value = true;
+    }
+};
+
 // Lifecycle Hooks
 onMounted(async () => {
     const service = await myMap.value.$mapPromise.then(
@@ -221,6 +247,14 @@ onMounted(async () => {
     ratings.value = rating;
     userRatingsTotal.value = user_ratings_total;
     reviewsArray.value = reviews;
+
+    if (openingHours.value) {
+        if (openingHours.value.periods) {
+            openingHours.value.periods.forEach((period) => {
+                findOpenStatus(period);
+            });
+        }
+    }
 });
 </script>
 

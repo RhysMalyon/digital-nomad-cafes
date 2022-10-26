@@ -226,6 +226,33 @@ const openingHours = ref() as Ref<
 >;
 const isOpen = ref<boolean>(false);
 
+const findOpenStatus = (
+    businessHours: google.maps.places.PlaceOpeningHoursPeriod
+) => {
+    const today = new Date();
+    const day = today.getDay();
+    const hour = today.getHours();
+    const minute = today.getMinutes();
+
+    if (businessHours.close) {
+        if (businessHours.open.day === day && businessHours.close.day >= day) {
+            if (
+                hour > businessHours.open.hours &&
+                hour < businessHours.close.hours
+            ) {
+                isOpen.value = true;
+            } else if (
+                hour === businessHours.close.hours &&
+                minute < businessHours.close.minutes
+            ) {
+                isOpen.value = true;
+            }
+        }
+    } else {
+        isOpen.value = true;
+    }
+};
+
 async function handleMarkerClick(place: Place) {
     placeImages.value = undefined;
     openingHours.value = undefined;
@@ -245,6 +272,14 @@ async function handleMarkerClick(place: Place) {
 
     placeImages.value = photos;
     openingHours.value = opening_hours;
+
+    if (openingHours.value) {
+        if (openingHours.value.periods) {
+            openingHours.value.periods.forEach((period) => {
+                findOpenStatus(period);
+            });
+        }
+    }
 }
 
 watch(
@@ -404,29 +439,6 @@ onUnmounted(() => {
         a {
             color: #fff;
         }
-    }
-}
-
-.btn-favorite {
-    height: 40px;
-    width: 40px;
-
-    display: flex;
-    justify-content: center;
-    align-items: center;
-
-    color: rgb(255, 0, 149) !important;
-    background-color: #fff;
-    border-radius: 50%;
-    font-size: 1.5rem;
-    cursor: pointer;
-
-    &:hover {
-        color: rgb(187, 0, 109);
-    }
-
-    svg {
-        padding-top: 4px;
     }
 }
 

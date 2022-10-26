@@ -18,7 +18,7 @@
 <script setup lang="ts">
 import { useHead } from '@vueuse/head';
 import { reactive } from 'vue';
-import GoogleMap from '../components/GoogleMap.vue';
+import GoogleMap from '@/components/GoogleMap.vue';
 
 // Page Meta
 const siteData = reactive({
@@ -39,7 +39,7 @@ useHead({
 
 <style lang="scss">
 .loading-spinner {
-    height: calc(100vh - 56px);
+    height: calc(100vh - 176px);
 
     .spinner-border {
         color: #ff9b00;
