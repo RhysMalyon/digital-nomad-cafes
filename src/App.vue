@@ -21,6 +21,13 @@ import TheFooter from './components/TheFooter.vue';
 <style lang="scss">
 @import url('https://fonts.googleapis.com/css2?family=Archivo:wght@900&family=Roboto:wght@500;700&display=swap');
 
+#app {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
 h1 {
     font-family: 'Archivo', sans-serif;
 }

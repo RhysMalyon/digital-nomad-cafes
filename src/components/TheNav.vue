@@ -1,8 +1,12 @@
 <template>
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top">
-        <div class="container-fluid">
-            <router-link to="/" class="navbar-brand">
-                <BIconHouseFill />
+        <div class="container-fluid h-100">
+            <router-link to="/" class="navbar-brand h-100">
+                <img
+                    src="@/assets/logo__white-only.webp"
+                    alt="Digital Nomads Logo"
+                    class="h-100"
+                />
             </router-link>
             <button
                 type="button"
@@ -25,7 +29,6 @@
 </template>
 
 <script setup lang="ts">
-import { BIconHouseFill } from 'bootstrap-icons-vue';
 import { useAuthStore } from '@/stores/AuthStore';
 import LoginModal from './LoginModal.vue';
 
@@ -33,6 +36,10 @@ const authStore = useAuthStore();
 </script>
 
 <style lang="scss" scoped>
+nav {
+    height: 56px;
+}
+
 p {
     color: #fff;
     width: fit-content;

@@ -163,9 +163,9 @@ const onSubmit = handleSubmit(async (values) => {
 </script>
 
 <style lang="scss">
-.form-login {
+.form-signup {
     max-width: 300px;
-    margin: 0 auto;
+    margin: 2rem auto;
 
     h2 {
         text-align: center;
