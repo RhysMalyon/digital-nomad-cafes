@@ -123,6 +123,7 @@ import CarouselModal from '@/components/CarouselModal.vue';
 import { apiClient } from '@/services/apiClient';
 import { fetchPlaceData } from '@/services/googleMaps';
 import type Place from '@/types/place';
+import { setOpenStatus } from '@/utils/openStatus';
 import { useHead } from '@vueuse/head';
 import {
     BIconGrid3x3Gap,
@@ -154,7 +155,10 @@ const businessStatus = ref() as Ref<
 const openingHours = ref() as Ref<
     google.maps.places.PlaceOpeningHours | undefined
 >;
-const isOpen = ref(false);
+const isOpen = ref<boolean | undefined>(false);
+const currentDate = new Date();
+const currentDay = currentDate.getDay();
+
 const ratings = ref<number | undefined>(0);
 const userRatingsTotal = ref<number | undefined>(0);
 const reviewsArray = ref([]) as Ref<
@@ -190,33 +194,6 @@ useHead({
     ],
 });
 
-const findOpenStatus = (
-    businessHours: google.maps.places.PlaceOpeningHoursPeriod
-) => {
-    const today = new Date();
-    const day = today.getDay();
-    const hour = today.getHours();
-    const minute = today.getMinutes();
-
-    if (businessHours.close) {
-        if (businessHours.open.day === day && businessHours.close.day >= day) {
-            if (
-                hour > businessHours.open.hours &&
-                hour < businessHours.close.hours
-            ) {
-                isOpen.value = true;
-            } else if (
-                hour === businessHours.close.hours &&
-                minute < businessHours.close.minutes
-            ) {
-                isOpen.value = true;
-            }
-        }
-    } else {
-        isOpen.value = true;
-    }
-};
-
 // Lifecycle Hooks
 onMounted(async () => {
     const service = await myMap.value.$mapPromise.then(
@@ -251,7 +228,9 @@ onMounted(async () => {
     if (openingHours.value) {
         if (openingHours.value.periods) {
             openingHours.value.periods.forEach((period) => {
-                findOpenStatus(period);
+                if (period.open.day === currentDay) {
+                    isOpen.value = setOpenStatus(period);
+                }
             });
         }
     }

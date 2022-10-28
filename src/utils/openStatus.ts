@@ -9,7 +9,7 @@ export const setOpenStatus = (
     if (businessHours.close) {
         if (businessHours.open.day === day && businessHours.close.day >= day) {
             if (
-                hour > businessHours.open.hours &&
+                hour >= businessHours.open.hours &&
                 hour < businessHours.close.hours
             ) {
                 return true;

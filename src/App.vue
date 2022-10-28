@@ -87,12 +87,17 @@ body {
     cursor: pointer;
     z-index: 10;
 
-    &:hover {
-        color: rgb(187, 0, 109);
-    }
-
     svg {
         padding-top: 4px;
+        transition: ease-in-out 200ms;
+    }
+
+    &:hover {
+        color: rgb(187, 0, 109);
+
+        svg {
+            transform: scale(1.1);
+        }
     }
 }
 </style>

@@ -118,29 +118,22 @@
 </template>
 
 <script setup lang="ts">
+import PlaceCard from '@/components/PlaceCard.vue';
 import { apiClient } from '@/services/apiClient';
 import { fetchPlaceData } from '@/services/googleMaps';
 import { useAuthStore } from '@/stores/AuthStore';
 import type Place from '@/types/place';
-import PlaceCard from '@/components/PlaceCard.vue';
 import {
-    BIconPinMap,
-    BIconViewList,
     BIconHeart,
     BIconHeartFill,
+    BIconPinMap,
     BIconPlug,
+    BIconViewList,
     BIconWifi,
 } from 'bootstrap-icons-vue';
-import {
-    computed,
-    onMounted,
-    onUnmounted,
-    reactive,
-    ref,
-    watch,
-    type Ref,
-} from 'vue';
+import { computed, onMounted, onUnmounted, reactive, ref, type Ref } from 'vue';
 import { useToast } from 'vue-toastification';
+import { setOpenStatus } from '@/utils/openStatus';
 
 const myMap = ref();
 
@@ -224,39 +217,13 @@ const placeImages = ref() as Ref<google.maps.places.PlacePhoto[] | undefined>;
 const openingHours = ref() as Ref<
     google.maps.places.PlaceOpeningHours | undefined
 >;
-const isOpen = ref<boolean>(false);
-
-const findOpenStatus = (
-    businessHours: google.maps.places.PlaceOpeningHoursPeriod
-) => {
-    const today = new Date();
-    const day = today.getDay();
-    const hour = today.getHours();
-    const minute = today.getMinutes();
-
-    if (businessHours.close) {
-        if (businessHours.open.day === day && businessHours.close.day >= day) {
-            if (
-                hour > businessHours.open.hours &&
-                hour < businessHours.close.hours
-            ) {
-                isOpen.value = true;
-            } else if (
-                hour === businessHours.close.hours &&
-                minute < businessHours.close.minutes
-            ) {
-                isOpen.value = true;
-            }
-        }
-    } else {
-        isOpen.value = true;
-    }
-};
+const isOpen = ref<boolean | undefined>(false);
+const currentDate = new Date();
+const currentDay = currentDate.getDay();
 
 async function handleMarkerClick(place: Place) {
     placeImages.value = undefined;
     openingHours.value = undefined;
-    isOpen.value = false;
 
     const service = await myMap.value.$mapPromise.then(
         async (mapObject: google.maps.Map) => {
@@ -276,20 +243,14 @@ async function handleMarkerClick(place: Place) {
     if (openingHours.value) {
         if (openingHours.value.periods) {
             openingHours.value.periods.forEach((period) => {
-                findOpenStatus(period);
+                if (period.open.day === currentDay) {
+                    isOpen.value = setOpenStatus(period);
+                }
+                console.log(isOpen.value);
             });
         }
     }
 }
-
-watch(
-    () => [openingHours.value],
-    () => {
-        if (openingHours.value) {
-            isOpen.value = !!openingHours.value.isOpen;
-        }
-    }
-);
 
 interface Favorite extends Place {
     favorite_id: number;
@@ -438,6 +399,10 @@ onUnmounted(() => {
 
         a {
             color: #fff;
+
+            &:hover {
+                color: #ffaf33;
+            }
         }
     }
 }
